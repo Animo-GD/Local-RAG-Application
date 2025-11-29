@@ -3,11 +3,11 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from utils.logger import logger
-from config import Settings
+from config import settings
+from api.routes import router
 import uvicorn
 
 
-settings = Settings()
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     logger.info("RAG System Started...")
@@ -31,6 +31,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Add Routers
+app.include_router(router=router,prefix="/api",tags=["RAG"])
+
 @app.get("/")
 def root():
     """Root endpoint with API information"""
@@ -45,13 +49,3 @@ def root():
         }
     })
 
-
-
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "main:app",
-        host=settings.API_HOST,
-        port=settings.API_PORT,
-        reload=True
-        )
