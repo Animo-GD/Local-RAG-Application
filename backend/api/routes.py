@@ -28,6 +28,8 @@ async def query(request:QueryRequest):
     try:
         if not request.query.strip():
             raise HTTPException(status_code=400,detail="Question cannot be empty")
+        if not rag_system:
+            raise HTTPException(status_code=503,detail="RAG system not initialized")
         result = rag_system.query(request.query)
 
         return QueryResponse(
@@ -77,6 +79,9 @@ async def health():
     """
     Checking the rag system health
     """
+    if not rag_system:
+        raise HTTPException(status_code=503,detail="RAG system not initialized")
+    
     services = {
         "llm":"healthy" if rag_system.llm_service.get_llm() else "unavaiable",
         "vectorstore":"healthy" if rag_system.vectorstore_service.vectorestore else "unavaliable",
