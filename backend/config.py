@@ -2,6 +2,10 @@ from pydantic_settings import BaseSettings
 from typing import List
 import os
 
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent
+
 class Settings(BaseSettings):
 
     # CORS
@@ -10,15 +14,15 @@ class Settings(BaseSettings):
     # Paths
     DOCUMENTS_DIR: str = "./data/documents"
     VECTORSTORE_DIR: str = "./data/chroma_db"
-    DATABASE_PATH: str = "./data/database.db"
+    DATABASE_PATH:str = str(BASE_DIR / "data" / "database.db")
     
     # LLM Settings
     LLM_MODEL: str = "llama3.1:8b"
     LLM_TEMPERATURE: float = 0.0
-    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
+    EMBEDDING_MODEL: str = "nomic-embed-text:latest"
     
     # Chunking
-    CHUNK_SIZE: int = 1000
+    CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 20
     
     # Retrieval

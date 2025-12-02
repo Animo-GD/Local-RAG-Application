@@ -59,9 +59,16 @@ async def health():
     """
     return HealthResponse(status="",services={"":""})
 
-@router.get("/document",response_model=DocumentResponse)
+@router.get("/document")
 async def document():
     """
     Getting the uploaded documents
     """
-    return DocumentResponse(details="")
+    try:
+        docs_path = Path(settings.DOCUMENTS_DIR)
+        docs = [f.name for f in docs_path.iterdir() if f.is_file()]
+        return {"documents":docs,"count":len(docs)}
+    except Exception as e:
+        logger.error(f"Error listing documents {e}")
+        raise HTTPException(status_code=500,detail=str(e))
+    

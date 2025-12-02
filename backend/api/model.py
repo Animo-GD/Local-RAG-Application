@@ -18,6 +18,6 @@ class HealthResponse(BaseModel):
     status:str
     services: Dict[str,str] = {}
 
-class DocumentResponse(BaseModel):
+class ErrorResponse(BaseModel):
     details:str
     error_code: Optional[str] = None
