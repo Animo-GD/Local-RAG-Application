@@ -1,6 +1,4 @@
 import dspy
-from typing import Literal
-from utils.logger import logger
 
 class QueryClassifier(dspy.Signature):
     """Classify user query into SQL, Document, or General Categories based on intent"""

@@ -13,7 +13,7 @@ class LLMServices:
         """Call the LLM"""
         try:
             logger.info(f"Initlizing LLM: {settings.LLM_MODEL}")
-            self.model = OllamaLLM(model=settings.LLM_MODEL,temperature=settings.LLM_TEMPERATURE)
+            self.llm = OllamaLLM(model=settings.LLM_MODEL,temperature=settings.LLM_TEMPERATURE)
             logger.info("LLM Initilized Successfully.")
         except Exception as e:
             logger.error(f"Failed To Initilize LLM {e}")
@@ -40,7 +40,7 @@ class LLMServices:
                 context = context if context else "There is no available context",
                 question=prompt
             )
-            response = self.model.invoke(formatted_prompt)
+            response = self.llm.invoke(formatted_prompt) if self.llm else ""
             return response
         except Exception as e:
             logger.error(f"Error Generating Response {e}")
@@ -48,4 +48,4 @@ class LLMServices:
         
     def get_llm(self):
         """Get the LLM instance"""
-        return self.model
+        return self.llm

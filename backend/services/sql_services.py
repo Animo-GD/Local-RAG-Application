@@ -13,6 +13,7 @@ class SQLService:
             max_tokens=512
         )
         dspy.configure(lm=self.lm)
+        self.avaliable_tables = []
 
     def initialize(self):
         """Initialize Database"""
@@ -26,7 +27,8 @@ class SQLService:
                 logger.warning("No database file found.")
         except Exception as e:
             logger.error(f"Failed to initialize database {e}")
-
+    def get_avaliable_tables(self):
+        return self.db.get_usable_table_names() if self.db else []
     class Text2SQL(dspy.Signature):
         """Converting natural language questions to SQL queries."""
         schema_db = dspy.InputField(desc="Database Schema Information.")

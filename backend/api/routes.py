@@ -9,8 +9,15 @@ from pathlib import Path
 
 
 router = APIRouter()
+rag_system = None
 
-@router.post("/query",response_model=QueryResponse)
+def set_rag_system(system):
+    global rag_system
+    rag_system = system
+
+
+
+@router.post("/query",response_model=QueryResponse,responses={400: {"model": ErrorResponse}})
 async def query(request:QueryRequest):
     """
     Query the RAG system with a question.
@@ -18,12 +25,25 @@ async def query(request:QueryRequest):
     The system will automatically determine whether to search documents,
     query the database, or provide a general response.
     """
-    return QueryResponse(
-        response="answer",
-        query_type="type"
-    )
+    try:
+        if not request.query.strip():
+            raise HTTPException(status_code=400,detail="Question cannot be empty")
+        result = rag_system.query(request.query)
 
-@router.post("/upload",response_model=UploadResponse)
+        return QueryResponse(
+            answer=result['answer'],
+            query_type=result['query_type'],
+            context=result.get('context', ''),
+            sql_query=result.get('sql_query', ''),
+            metadata=result.get('metadata', {})
+        )
+    except Exception as e:
+        logger.info(f"Error processing query: {e}")
+        raise HTTPException(status_code=500,detail=str(e))
+    
+
+
+@router.post("/upload",response_model=UploadResponse,responses={400: {"model": ErrorResponse}})
 async def upload(file:UploadFile = File(...)):
     """
     Upload a document to the RAG system.
@@ -57,7 +77,13 @@ async def health():
     """
     Checking the rag system health
     """
-    return HealthResponse(status="",services={"":""})
+    services = {
+        "llm":"healthy" if rag_system.llm_service.get_llm() else "unavaiable",
+        "vectorstore":"healthy" if rag_system.vectorstore_service.vectorestore else "unavaliable",
+        "sql_db":"healthy" if rag_system.sql_service.db else "unavaliable"
+    }
+    return HealthResponse(status="healthy" if rag_system.initialized else "initializing",
+                          services=services)
 
 @router.get("/document")
 async def document():

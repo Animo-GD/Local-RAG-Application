@@ -4,13 +4,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from utils.logger import logger
 from config import settings
-from api.routes import router
-import uvicorn
+from api.routes import router,set_rag_system
+from core.rag_system import RAG
+
+rag_system = RAG()
 
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     logger.info("RAG System Started...")
+    rag_system.setup()
+    set_rag_system(rag_system)
     yield
     logger.info("RAG System Closed!")
 

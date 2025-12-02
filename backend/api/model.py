@@ -4,7 +4,7 @@ class QueryRequest(BaseModel):
     query:str = Field(...,min_length=1,description="Question to ask RAG System")
 
 class QueryResponse(BaseModel):
-    response:str
+    answer:str
     query_type:str
     context: Optional[str]=""
     sql_query:Optional[str]=""
