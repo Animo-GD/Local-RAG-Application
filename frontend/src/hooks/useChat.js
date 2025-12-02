@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import apiService from '../services/api.js';
-import { MESSAGE_ROLES } from '../utils/constants.js';
+import { MESSAGE_ROLES } from '../utils/constant.js';
 
 export const useChat = () => {
   const [messages, setMessages] = useState([]);

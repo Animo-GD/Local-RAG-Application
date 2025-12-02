@@ -1,18 +1,18 @@
-import { API_BASE_URL } from '../utils/constants.js';
+import { API_BASE_URL } from '../utils/constant.js';
 
 class APIService {
   constructor() {
     this.baseURL = API_BASE_URL;
   }
 
-  async query(question) {
+  async query(query) {
     try {
       const response = await fetch(`${this.baseURL}/api/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ query }),
       });
 
       if (!response.ok) {

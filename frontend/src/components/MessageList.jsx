@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Database, FileText, AlertCircle, CheckCircle, Bot, User } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
-import { MESSAGE_ROLES } from '../utils/constants.js';
+import { MESSAGE_ROLES } from '../utils/constant.js';
 
 const MessageList = ({ messages, loading }) => {
   const messagesEndRef = useRef(null);

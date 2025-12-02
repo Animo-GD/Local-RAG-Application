@@ -26,7 +26,7 @@ class LLMServices:
                 """
                 # System
                 Answer the user query from the context below with out adding any explaination, make it a direct answer.
-                If you can't answer from the context, Say You don't have information to answer this query.
+                If you can't answer from the context, Answer the question by your knowledge.
 
                 ## Context:
                 {context}

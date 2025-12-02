@@ -34,7 +34,7 @@ const MessageInput = ({ onSend, loading, disabled }) => {
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Ask a question about your documents or database..."
-          className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[52px] max-h-[200px]"
+          className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[52px] max-h-[200px]"
           disabled={loading || disabled}
           rows={1}
         />

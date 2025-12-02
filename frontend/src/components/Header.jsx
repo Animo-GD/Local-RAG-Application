@@ -10,7 +10,7 @@ const Header = ({ onUploadClick, uploading }) => {
             <Database className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">RAG System</h1>
+            <h1 className="text-2xl font-bold text-blue">RAG System</h1>
             <p className="text-sm text-slate-400">
               Query documents and databases with AI
             </p>
@@ -49,10 +49,10 @@ const Header = ({ onUploadClick, uploading }) => {
           </button>
 
           <a
-            href="https://github.com"
+            href="https://github.com/Animo-GD/Local-RAG-Application"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 text-slate-400 hover:text-white transition-colors"
+            className="p-2 text-slate-400 hover:text-red-200 transition-colors"
             title="View on GitHub"
           >
             <Github className="w-5 h-5" />
