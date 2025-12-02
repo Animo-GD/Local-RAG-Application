@@ -35,10 +35,10 @@ class VectorestoreService:
             logger.error(f"Error adding documents: {e}")
             raise
     
-    def similarity_search(self,query:str,k:int=None):
+    def similarity_search(self,query:str,k:int=settings.TOP_K_RESULTS):
         """Performe Similarity Search"""
         try:
-            k = k or settings.TOP_K_RESULTS
+            k = k
             logger.info(f"Performing similarity search for the provided query...")
             results = self.vectorestore.similarity_search(query,k=k) if self.vectorestore else []
             logger.info(f"Found {len(results)} results") 
