@@ -67,7 +67,7 @@ class RAG:
             raise RuntimeError("RAG System not initialized. Call Setup() first")
         logger.info(f"Processing query: {question}")
         inputs = {"question": question, "config": config}
-        result = self.graph.invoke(inputs) if self.graph else {}
+        result = self.graph.invoke(question,config) if self.graph else {}
         return {
             "answer":result["answer"],
             "query_type":result["query_type"],

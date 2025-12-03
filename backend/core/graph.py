@@ -89,7 +89,7 @@ class Graph:
                 return state
             logger.info("Generating answer...")
             question = state["question"]
-            documents = state["documents"]
+            documents = self.document_services.load_all_documents()
             config = state.get("config", {})
             context = "\n\n".join([doc.page_content for doc in documents])
             response = self.llm_services.generate_response(
@@ -104,7 +104,7 @@ class Graph:
             logger.error(f"Error generating answer: {e}")
         return state
 
-    def invoke(self,question:str)->dict:
+    def invoke(self,question:str,config:dict)->dict:
         """Invoke the graph with a question"""
         initial_state:GraphState={
             "question":question,
@@ -114,6 +114,7 @@ class Graph:
             "sql_result":[{}],
             "answer":"",
             "error":"",
+            "config":config,
             "metadata":{}
         }
         result = self.graph.invoke(initial_state) if self.graph else {}

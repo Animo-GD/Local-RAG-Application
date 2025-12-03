@@ -23,7 +23,7 @@ class LLMServices:
             logger.info("Local LLM Initialized Successfully.")
         except Exception as e:
             logger.error(f"Failed To Initialize LLM {e}")
-    def generate_response(self,prompt:str,context:str="",config: dict = {})->str:
+    def generate_response(self,prompt:str,context:str="",config: dict = {"model":"llama3.1:8b"})->str:
         """Generate a response from the LLM"""
         try:
             requested_model = config.get('model', settings.LLM_MODEL)
@@ -47,9 +47,7 @@ class LLMServices:
                 context = context if context else "There is no available context",
                 question=prompt
             )
-            response = self.llm.invoke(formatted_prompt)
-            if hasattr(response, 'content'):
-                return response.content
+            response = self.llm.invoke(formatted_prompt,config)
             return response
         except Exception as e:
             logger.error(f"Error Generating Response {e}")
