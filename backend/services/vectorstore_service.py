@@ -2,6 +2,7 @@ from langchain_ollama.embeddings import OllamaEmbeddings
 from langchain_chroma import Chroma
 from utils.logger import logger
 from config import settings
+import os
 class VectorestoreService:
     """Service for vector store operations."""
     def __init__(self) -> None:
@@ -35,12 +36,17 @@ class VectorestoreService:
             logger.error(f"Error adding documents: {e}")
             raise
     
-    def similarity_search(self,query:str,k:int=settings.TOP_K_RESULTS):
+    def similarity_search(self,query:str,k:int=settings.TOP_K_RESULTS,filter_files: list = None):
         """Performe Similarity Search"""
         try:
-            k = k
+            search_kwargs = {"k": k}
+            if filter_files and len(filter_files) > 0:
+                if len(filter_files) == 1:
+                    search_kwargs["filter"] = {"filename": filter_files[0]}
+                else:
+                    search_kwargs["filter"] = {"filename": {"$in": filter_files}}
             logger.info(f"Performing similarity search for the provided query...")
-            results = self.vectorestore.similarity_search(query,k=k) if self.vectorestore else []
+            results = self.vectorestore.similarity_search(query,**search_kwargs) if self.vectorestore else []
             logger.info(f"Found {len(results)} results") 
             return results
         except Exception as e:

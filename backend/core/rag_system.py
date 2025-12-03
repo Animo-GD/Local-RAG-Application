@@ -61,12 +61,13 @@ class RAG:
             logger.error(f"Error adding document: {e}")
             raise
 
-    def query(self,question:str)->dict:
+    def query(self,question:str,config: dict = {})->dict:
         """Query The RAG System"""
         if not self.initialized:
             raise RuntimeError("RAG System not initialized. Call Setup() first")
         logger.info(f"Processing query: {question}")
-        result = self.graph.invoke(question) if self.graph else {}
+        inputs = {"question": question, "config": config}
+        result = self.graph.invoke(inputs) if self.graph else {}
         return {
             "answer":result["answer"],
             "query_type":result["query_type"],

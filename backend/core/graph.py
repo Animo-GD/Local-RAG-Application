@@ -44,7 +44,9 @@ class Graph:
         """retrieve relevant documents"""
         try:
             logger.info("Retrieving documents...")
-            docs = self.vectorstore_services.similarity_search(state["question"])
+            config = state.get("config", {})
+            filter_files = config.get("selected_files")
+            docs = self.vectorstore_services.similarity_search(state["question"],filter_files=filter_files)
             if docs:
                 state["context"]="\n\n".join([doc.page_content for doc in docs])
                 state["metadata"]["retrieved_docs"] = len(docs)
@@ -82,13 +84,18 @@ class Graph:
         """Generate Final Answer"""
         try:
             if state.get("error"):
-                state["answer"] = f"I encountered an error: {state["error"]}"
-                logger.warning(f"Generating error response: {state["error"]}")
+                state["answer"] = f"I encountered an error: {state['error']}"
+                logger.warning(f"Generating error response: {state['error']}")
                 return state
             logger.info("Generating answer...")
+            question = state["question"]
+            documents = state["documents"]
+            config = state.get("config", {})
+            context = "\n\n".join([doc.page_content for doc in documents])
             response = self.llm_services.generate_response(
-                prompt=state["question"],
-                context=state.get("context","")
+                prompt=question ,
+                context=context,
+                config=config
             )
             state["answer"] = response
             logger.info("Answer generated successfully.")

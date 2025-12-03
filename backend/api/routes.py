@@ -30,7 +30,11 @@ async def query(request:QueryRequest):
             raise HTTPException(status_code=400,detail="Question cannot be empty")
         if not rag_system:
             raise HTTPException(status_code=503,detail="RAG system not initialized")
-        result = rag_system.query(request.query)
+        request_config = {
+        "model": request.model,
+        "selected_files": request.selected_files,
+        }
+        result = rag_system.query(request.query, config=request_config)
 
         return QueryResponse(
             answer=result['answer'],
@@ -44,6 +48,22 @@ async def query(request:QueryRequest):
         raise HTTPException(status_code=500,detail=str(e))
     
 
+@router.delete("/document")
+async def delete_document(request: DeleteFileRequest):
+    """Delete a document"""
+    try:
+        filename = sanitize_filename(request.filename)
+        filepath = os.path.join(settings.DOCUMENTS_DIR, filename)
+        
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            logger.info(f"Deleted file: {filename}")
+            return {"message": f"File {filename} deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="File not found")
+    except Exception as e:
+        logger.error(f"Error deleting document: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/upload",response_model=UploadResponse,responses={400: {"model": ErrorResponse}})
 async def upload(file:UploadFile = File(...)):

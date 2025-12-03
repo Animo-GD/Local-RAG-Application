@@ -8,4 +8,5 @@ class GraphState(TypedDict):
     sql_result:List[Dict]
     answer:str
     error:str
+    config: Dict
     metadata:Dict

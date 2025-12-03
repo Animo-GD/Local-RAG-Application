@@ -10,18 +10,25 @@ class LLMServices:
         self.llm = None
 
     def intialize(self):
-        """Call the LLM"""
-        try:
-            logger.info(f"Initlizing LLM: {settings.LLM_MODEL}")
-            self.llm = OllamaLLM(model=settings.LLM_MODEL,temperature=settings.LLM_TEMPERATURE)
-            logger.info("LLM Initilized Successfully.")
-        except Exception as e:
-            logger.error(f"Failed To Initilize LLM {e}")
-            raise
+        """Initialize default Local LLM"""
+        self._set_llm(settings.LLM_MODEL)
 
-    def generate_response(self,prompt:str,context:str="")->str:
+
+    def _set_llm(self, model_name: str):
+        """Helper to initialize/update LLM instance"""
+        try:
+            logger.info(f"Initializing Local LLM: {model_name}")
+            self.llm = OllamaLLM(model=model_name, temperature=settings.LLM_TEMPERATURE)
+            self.current_model = model_name
+            logger.info("Local LLM Initialized Successfully.")
+        except Exception as e:
+            logger.error(f"Failed To Initialize LLM {e}")
+    def generate_response(self,prompt:str,context:str="",config: dict = {})->str:
         """Generate a response from the LLM"""
         try:
+            requested_model = config.get('model', settings.LLM_MODEL)
+            if requested_model != self.current_model:
+                self._set_llm(requested_model)
             template = PromptTemplate.from_template(
                 """
                 # System
@@ -40,7 +47,9 @@ class LLMServices:
                 context = context if context else "There is no available context",
                 question=prompt
             )
-            response = self.llm.invoke(formatted_prompt) if self.llm else ""
+            response = self.llm.invoke(formatted_prompt)
+            if hasattr(response, 'content'):
+                return response.content
             return response
         except Exception as e:
             logger.error(f"Error Generating Response {e}")
@@ -49,3 +58,4 @@ class LLMServices:
     def get_llm(self):
         """Get the LLM instance"""
         return self.llm
+            

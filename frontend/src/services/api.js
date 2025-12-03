@@ -5,14 +5,18 @@ class APIService {
     this.baseURL = API_BASE_URL;
   }
 
-  async query(query) {
+  async query(query, options = {}) {
     try {
       const response = await fetch(`${this.baseURL}/api/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ 
+            query,
+            model: options.model, 
+            selected_files: options.selectedFiles
+        }),
       });
 
       if (!response.ok) {
@@ -27,7 +31,22 @@ class APIService {
     }
   }
 
-  async uploadDocument(file) {
+  async deleteDocument(filename) {
+      try {
+        const response = await fetch(`${this.baseURL}/api/document`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename })
+        });
+        if (!response.ok) throw new Error('Failed to delete');
+        return await response.json();
+    } catch (error) {
+        console.error('Delete error:', error);
+        throw error;
+    }
+  }
+  
+    async uploadDocument(file) {
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -62,7 +81,7 @@ class APIService {
 
   async listDocuments() {
     try {
-      const response = await fetch(`${this.baseURL}/api/documents`);
+      const response = await fetch(`${this.baseURL}/api/document`);
       if (!response.ok) throw new Error('Failed to list documents');
       return await response.json();
     } catch (error) {

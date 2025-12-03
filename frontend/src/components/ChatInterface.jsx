@@ -6,7 +6,7 @@ import FileUpload from './FileUpload';
 import { useChat } from '../hooks/useChat';
 import { useFileUpload } from '../hooks/useFileUpload';
 
-const ChatInterface = () => {
+const ChatInterface = ({ config, setConfig }) => {
   const fileUploadRef = useRef(null);
   const { messages, loading, sendMessage, addSystemMessage } = useChat();
 
@@ -41,15 +41,24 @@ const ChatInterface = () => {
     input.click();
   };
 
+  const handleSendMessage = (text) => {
+    sendMessage(text, config);
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Header onUploadClick={triggerFileUpload} uploading={uploading} />
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
+      <Header 
+        onUploadClick={triggerFileUpload} 
+        uploading={uploading} 
+        config={config}       
+        setConfig={setConfig} 
+      />
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <MessageList messages={messages} loading={loading} />
       </div>
 
-      <MessageInput onSend={sendMessage} loading={loading} disabled={false} />
+      <MessageInput onSend={handleSendMessage} loading={loading} disabled={false} />
 
       <FileUpload
         ref={fileUploadRef}
@@ -60,4 +69,4 @@ const ChatInterface = () => {
   );
 };
 
-export default ChatInterface
+export default ChatInterface;

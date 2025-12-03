@@ -1,0 +1,24 @@
+FROM python:3.11-slim
+
+# Prevent Python buffering
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app/backend
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc build-essential libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install Python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code only
+COPY . .
+
+# Expose API port
+EXPOSE 5000
+
+# Start FastAPI (adjust 'main:app' if your entrypoint is different, e.g., 'app.main:app')
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]

@@ -31,6 +31,8 @@ class DocumentServices:
             else:
                 raise ValueError(f"Unsupported file type: {path.suffix}")
             documents = loader.load()
+            for doc in documents:
+                doc.metadata["filename"] = path.name
             logger.info(f"Loaded {len(documents)} pages/sections")
             return documents
         except Exception as e:

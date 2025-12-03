@@ -7,10 +7,9 @@ export const useChat = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const sendMessage = useCallback(async (question) => {
+  const sendMessage = useCallback(async (question, config = {}) => {
     if (!question.trim()) return;
 
-    // Add user message
     const userMessage = {
       role: MESSAGE_ROLES.USER,
       content: question,
@@ -22,7 +21,7 @@ export const useChat = () => {
     setError(null);
 
     try {
-      const response = await apiService.query(question);
+      const response = await apiService.query(question, config);
 
       const assistantMessage = {
         role: MESSAGE_ROLES.ASSISTANT,

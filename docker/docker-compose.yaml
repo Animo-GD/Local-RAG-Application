@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: rag-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - backend_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///data/database.db
+      - CHROMA_DB_PATH=data/chroma_db
+      - DOCUMENT_PATH=data/documents
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway" 
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: rag-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:5000
+
+volumes:
+  backend_data:
