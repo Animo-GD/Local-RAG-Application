@@ -16,7 +16,6 @@ def set_rag_system(system):
     rag_system = system
 
 
-
 @router.post("/query",response_model=QueryResponse,responses={400: {"model": ErrorResponse}})
 async def query(request:QueryRequest):
     """
@@ -33,6 +32,7 @@ async def query(request:QueryRequest):
         request_config = {
         "model": request.model,
         "selected_files": request.selected_files,
+        "selected_tables": request.selected_tables,  
         }
         result = rag_system.query(request.query, config=request_config)
 
@@ -58,6 +58,15 @@ async def delete_document(request: DeleteFileRequest):
         if os.path.exists(filepath):
             os.remove(filepath)
             logger.info(f"Deleted file: {filename}")
+            
+            # Delete from vectorstore
+            if rag_system:
+                try:
+                    rag_system.vectorstore_service.delete_documents_by_filename(filename)
+                    logger.info(f"Deleted embeddings for: {filename}")
+                except Exception as e:
+                    logger.warning(f"Could not delete embeddings: {e}")
+            
             return {"message": f"File {filename} deleted successfully"}
         else:
             raise HTTPException(status_code=404, detail="File not found")
@@ -73,7 +82,7 @@ async def upload(file:UploadFile = File(...)):
     Supported formats: PDF, TXT, MD, CSV
     """
     try:
-        # Vaildat File
+        # Validate File
         if not file.filename:
             raise HTTPException(status_code=400,detail="No File Selected!")
         if not is_valid_document(file.filename):
@@ -84,7 +93,7 @@ async def upload(file:UploadFile = File(...)):
         # Save File
         filepath = os.path.join(settings.DOCUMENTS_DIR,filename)
         with open(filepath,"wb") as buffer:
-            shutil.copyfileobj(file.file,buffer) # Save it chunk by chunk in size 16KB
+            shutil.copyfileobj(file.file,buffer)
         
         logger.info("Document Uploaded Successfully")
 
@@ -104,7 +113,7 @@ async def health():
     
     services = {
         "llm":"healthy" if rag_system.llm_service.get_llm() else "unavaiable",
-        "vectorstore":"healthy" if rag_system.vectorstore_service.vectorestore else "unavaliable",
+        "vectorstore":"healthy" if rag_system.vectorstore_service.vectorstore else "unavaliable",
         "sql_db":"healthy" if rag_system.sql_service.db else "unavaliable"
     }
     return HealthResponse(status="healthy" if rag_system.initialized else "initializing",
@@ -122,4 +131,38 @@ async def document():
     except Exception as e:
         logger.error(f"Error listing documents {e}")
         raise HTTPException(status_code=500,detail=str(e))
-    
+
+@router.get("/tables")
+async def get_tables():
+    """
+    Get available database tables with schema information
+    """
+    try:
+        if not rag_system:
+            raise HTTPException(status_code=503, detail="RAG system not initialized")
+        
+        tables = rag_system.sql_service.get_avaliable_tables()
+        
+        # Get schema info for each table
+        tables_info = []
+        for table in tables:
+            try:
+                schema = rag_system.sql_service.get_table_schema(table)
+                tables_info.append({
+                    "name": table,
+                    "schema": schema
+                })
+            except Exception as e:
+                logger.warning(f"Could not get schema for table {table}: {e}")
+                tables_info.append({
+                    "name": table,
+                    "schema": None
+                })
+        
+        return {
+            "tables": tables_info,
+            "count": len(tables_info)
+        }
+    except Exception as e:
+        logger.error(f"Error listing tables: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

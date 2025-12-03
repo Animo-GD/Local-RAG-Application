@@ -19,21 +19,28 @@ class Graph:
         self.document_services = document_services
         self.graph = None
 
-    def classify_query(self,state:GraphState)->GraphState:
+    def classify_query(self, state: GraphState) -> GraphState:
         """Classify type of query (document, sql, general)"""
         question = state["question"]
+        config = state.get("config", {})
+        selected_tables = config.get("selected_tables", [])
+        
         logger.info("Start Classify User's Query...")
         classifier = SmartQueryClassifier()
         documents = self.document_services.load_all_documents()
         doc_titles = [doc.metadata.get('source', 'Unknown') for doc in documents if hasattr(doc, 'metadata')]
+        
+        # Use selected tables if specified, otherwise all tables
+        tables = selected_tables if selected_tables else self.sql_services.get_avaliable_tables()
+        
         result = classifier(
-        question=question,
-        tables=self.sql_services.get_avaliable_tables(),
-        documents=doc_titles
+            question=question,
+            tables=tables,
+            documents=doc_titles
         )
         logger.info(f"Classification Finished, Result: {result}")
-        state["query_type"]= result['query_type']
-        state["metadata"] = {"confidence":result['confidence'],"reasoning":result['reasoning']}
+        state["query_type"] = result['query_type']
+        state["metadata"] = {"confidence": result['confidence'], "reasoning": result['reasoning']}
         return state
     
     def route_query(self,state:GraphState)->str:
@@ -45,7 +52,7 @@ class Graph:
         try:
             logger.info("Retrieving documents...")
             config = state.get("config", {})
-            filter_files = config.get("selected_files")
+            filter_files = config.get("selected_files", [])
             docs = self.vectorstore_services.similarity_search(state["question"],filter_files=filter_files)
             if docs:
                 state["context"]="\n\n".join([doc.page_content for doc in docs])
@@ -60,12 +67,18 @@ class Graph:
             logger.error(f"Error retrieving documents {e}")
         return state
     
-    def query_sql(self,state:GraphState)->GraphState:
+    def query_sql(self, state: GraphState) -> GraphState:
         """Execute SQL query"""
         try:
             logger.info("Generating and executing sql query...")
-            llm = self.llm_services.get_llm()
-            sql_query = self.sql_services.generate_sql(state["question"])
+            config = state.get("config", {})
+            selected_tables = config.get("selected_tables", [])
+            
+            sql_query = self.sql_services.generate_sql(
+                state["question"], 
+                selected_tables=selected_tables
+            )
+            
             if sql_query:
                 state["sql_query"] = sql_query
                 result = self.sql_services.execute_sql_as_dict(sql_query=sql_query)
@@ -111,7 +124,7 @@ class Graph:
             "query_type":"general",
             "context":"",
             "sql_query":"",
-            "sql_result":[{}],
+            "sql_result":[],
             "answer":"",
             "error":"",
             "config":config,

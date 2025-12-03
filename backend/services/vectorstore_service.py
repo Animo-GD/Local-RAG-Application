@@ -7,7 +7,7 @@ class VectorestoreService:
     """Service for vector store operations."""
     def __init__(self) -> None:
         self.embedding = None
-        self.vectorestore = None
+        self.vectorstore = None
 
     def initialize(self):
         """Initialize vectore store and embedding model"""
@@ -36,17 +36,21 @@ class VectorestoreService:
             logger.error(f"Error adding documents: {e}")
             raise
     
-    def similarity_search(self,query:str,k:int=settings.TOP_K_RESULTS,filter_files: list = None):
+    def similarity_search(self,query:str,k:int=settings.TOP_K_RESULTS,filter_files: list = []):
         """Performe Similarity Search"""
         try:
             search_kwargs = {"k": k}
+            filter_arg = None
             if filter_files and len(filter_files) > 0:
-                if len(filter_files) == 1:
-                    search_kwargs["filter"] = {"filename": filter_files[0]}
-                else:
-                    search_kwargs["filter"] = {"filename": {"$in": filter_files}}
+                # Join multiple filenames into a single comma-separated string
+                filter_arg = {"filename": ",".join(filter_files)}
+            else:
+                filter_arg = None
             logger.info(f"Performing similarity search for the provided query...")
-            results = self.vectorestore.similarity_search(query,**search_kwargs) if self.vectorestore else []
+            if self.vectorestore:
+                results = self.vectorestore.similarity_search(query, k=k, filter=filter_arg)
+            else:
+                results = []
             logger.info(f"Found {len(results)} results") 
             return results
         except Exception as e:

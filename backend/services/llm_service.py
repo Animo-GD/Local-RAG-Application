@@ -2,7 +2,7 @@ from langchain_ollama import OllamaLLM
 from utils.logger import logger
 from langchain_core.prompts import PromptTemplate
 from config import settings
-
+import dspy
 
 class LLMServices:
     """Services for llm operations"""
@@ -12,13 +12,27 @@ class LLMServices:
     def intialize(self):
         """Initialize default Local LLM"""
         self._set_llm(settings.LLM_MODEL)
+        try:
+            dspy_lm = dspy.LM(
+                model=f"ollama/{settings.LLM_MODEL}",
+                api_base=settings.OLLAMA_BASE_URL,
+                max_tokens=512
+            )
+            dspy.configure(lm=dspy_lm)
+            logger.info("DSPy configured successfully")
+        except Exception as e:
+            logger.error(f"Failed to configure DSPy: {e}")
 
 
     def _set_llm(self, model_name: str):
         """Helper to initialize/update LLM instance"""
         try:
             logger.info(f"Initializing Local LLM: {model_name}")
-            self.llm = OllamaLLM(model=model_name, temperature=settings.LLM_TEMPERATURE)
+            self.llm = OllamaLLM(
+                model=model_name, 
+                temperature=settings.LLM_TEMPERATURE,
+                base_url=settings.OLLAMA_BASE_URL
+            )
             self.current_model = model_name
             logger.info("Local LLM Initialized Successfully.")
         except Exception as e:
@@ -47,7 +61,7 @@ class LLMServices:
                 context = context if context else "There is no available context",
                 question=prompt
             )
-            response = self.llm.invoke(formatted_prompt,config)
+            response = self.llm.invoke(formatted_prompt) if self.llm else ""
             return response
         except Exception as e:
             logger.error(f"Error Generating Response {e}")

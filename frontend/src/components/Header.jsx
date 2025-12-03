@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Github, Settings, Moon, Sun, Trash2, FileText, Server } from 'lucide-react';
+import { Database, Github, Settings, Moon, Sun, Trash2, FileText, Server, Table } from 'lucide-react';
 import api from '../services/api';
 
 const Header = ({ onUploadClick, uploading, config, setConfig }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [documents, setDocuments] = useState([]);
+  const [tables, setTables] = useState([]);
   const [darkMode, setDarkMode] = useState(true);
 
   useEffect(() => {
     if (isSettingsOpen) {
       loadDocuments();
+      loadTables();
     }
   }, [isSettingsOpen]);
 
@@ -27,6 +29,16 @@ const Header = ({ onUploadClick, uploading, config, setConfig }) => {
       setDocuments(res.documents);
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const loadTables = async () => {
+    try {
+      const res = await api.listTables();
+      setTables(res.tables);
+    } catch (e) {
+      console.error('Failed to load tables:', e);
+      setTables([]);
     }
   };
 
@@ -53,6 +65,18 @@ const Header = ({ onUploadClick, uploading, config, setConfig }) => {
             selectedFiles: isSelected 
                 ? prev.selectedFiles.filter(f => f !== filename)
                 : [...prev.selectedFiles, filename]
+        };
+    });
+  };
+
+  const toggleTableSelection = (tableName) => {
+    setConfig(prev => {
+        const isSelected = prev.selectedTables.includes(tableName);
+        return {
+            ...prev,
+            selectedTables: isSelected 
+                ? prev.selectedTables.filter(t => t !== tableName)
+                : [...prev.selectedTables, tableName]
         };
     });
   };
@@ -113,11 +137,11 @@ const Header = ({ onUploadClick, uploading, config, setConfig }) => {
                 <Settings className="w-4 h-4" /> Local Configuration
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Model Settings */}
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                        <label className="text-sm font-medium mb-1 text-gray-700 dark:text-gray-300 flex items-center gap-2">
                              <Server className="w-4 h-4" /> Ollama Model
                         </label>
                         <input 
@@ -128,15 +152,15 @@ const Header = ({ onUploadClick, uploading, config, setConfig }) => {
                             className="w-full p-2 rounded bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                            Ensure this model is pulled in your local Ollama instance (e.g., <code>ollama pull llama3.1</code>).
+                            Ensure this model is pulled in your local Ollama instance.
                         </p>
                     </div>
                 </div>
 
-                {/* Knowledge Base Selection */}
+                {/* Document Selection */}
                 <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                        Select Documents to Query
+                    <label className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                        <FileText className="w-4 h-4" /> Documents
                     </label>
                     <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 p-2 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-slate-600">
                         {documents.length === 0 ? (
@@ -166,7 +190,52 @@ const Header = ({ onUploadClick, uploading, config, setConfig }) => {
                         )}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                        Select specific files to narrow down the search context. If none selected, all files are used.
+                        Select specific files to narrow down the search context.
+                    </p>
+                </div>
+
+                {/* Database Tables Selection */}
+                <div>
+                    <label className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                        <Table className="w-4 h-4" /> Database Tables
+                    </label>
+                    <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 p-2 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-slate-600">
+                        {tables.length === 0 ? (
+                            <p className="text-sm text-gray-500 text-center py-2">No tables found</p>
+                        ) : (
+                            tables.map((table, idx) => (
+                                <div key={idx} className="mb-2">
+                                    <div 
+                                        className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
+                                        onClick={() => toggleTableSelection(table.name)}
+                                    >
+                                        <input 
+                                            type="checkbox"
+                                            checked={config.selectedTables.includes(table.name)}
+                                            onChange={() => {}} 
+                                            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                        />
+                                        <Database className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium select-none text-gray-700 dark:text-gray-200">{table.name}</span>
+                                    </div>
+                                    {table.schema && config.selectedTables.includes(table.name) && (
+                                        <div className="ml-8 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            <div className="bg-gray-100 dark:bg-slate-800 p-2 rounded">
+                                                {table.schema.columns.map((col, i) => (
+                                                    <div key={i} className="flex gap-2">
+                                                        <span className="font-mono">{col.name}</span>
+                                                        <span className="text-gray-400">({col.type})</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Select specific tables to narrow down SQL queries.
                     </p>
                 </div>
             </div>

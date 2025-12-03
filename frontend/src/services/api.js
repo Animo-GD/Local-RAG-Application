@@ -15,7 +15,8 @@ class APIService {
         body: JSON.stringify({ 
             query,
             model: options.model, 
-            selected_files: options.selectedFiles
+            selected_files: options.selectedFiles || [],
+            selected_tables: options.selectedTables || []  // Add this
         }),
       });
 
@@ -46,7 +47,7 @@ class APIService {
     }
   }
   
-    async uploadDocument(file) {
+  async uploadDocument(file) {
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -86,6 +87,17 @@ class APIService {
       return await response.json();
     } catch (error) {
       console.error('List documents error:', error);
+      throw error;
+    }
+  }
+
+  async listTables() {
+    try {
+      const response = await fetch(`${this.baseURL}/api/tables`);
+      if (!response.ok) throw new Error('Failed to list tables');
+      return await response.json();
+    } catch (error) {
+      console.error('List tables error:', error);
       throw error;
     }
   }

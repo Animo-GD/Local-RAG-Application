@@ -9,13 +9,17 @@ BASE_DIR = Path(__file__).parent
 class Settings(BaseSettings):
 
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000", 
+        "http://localhost:5173",
+        "http://localhost:5174"  # Backup Vite port
+    ]
     
     # Paths
     DOCUMENTS_DIR: str = "./data/documents"
     VECTORSTORE_DIR: str = "./data/chroma_db"
     DATABASE_PATH:str = str(BASE_DIR / "data" / "database.db")
-    
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
     # LLM Settings
     LLM_MODEL: str = "llama3.1:8b"
     LLM_TEMPERATURE: float = 0.0
