@@ -22,7 +22,6 @@ Privacy-focused RAG system that runs entirely offline:
 ----
 # Screenshots
 ![screenshot](screenshot.png)
-
 ![screenshot2](screenshot2.png)
 ------------
 # Setup
@@ -33,10 +32,13 @@ Privacy-focused RAG system that runs entirely offline:
 ollama pull llama3.1:8b
 ```
 ### Setup Environment Variable.
-1. Rename 1.
+1. Rename `.env.example` to `.env`.
 ```bash
 cp .env.example .env
 ```
+2. Setup Your Variables.
+- You can pull any model you want, but you will have to change `LLM_MODEL` = `Your Model Name`
+- You can direct `DATABASE_PATH` to your local database by using the absolute path.
 
 ### Install Requirements
 1. Make a virtual environment and activate it.
@@ -73,3 +75,5 @@ uvicorn main:app --reload --host 0.0.0.0 --port 5000
 cd frontend
 npm run
 ```
+
+3. Access Application from here [http://localhost:5173/](hhttp://localhost:5173/)
