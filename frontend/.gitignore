@@ -23,5 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
+data/*.pdf
+data/*.txt
+data/*.db
 data
-
