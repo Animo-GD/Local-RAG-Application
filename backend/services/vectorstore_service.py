@@ -3,11 +3,12 @@ from langchain_chroma import Chroma
 from utils.logger import logger
 from config import settings
 import os
+
 class VectorestoreService:
     """Service for vector store operations."""
     def __init__(self) -> None:
         self.embedding = None
-        self.vectorstore = None
+        self.vectorestore = None
 
     def initialize(self):
         """Initialize vectore store and embedding model"""
@@ -23,7 +24,8 @@ class VectorestoreService:
         except Exception as e:
             logger.error(f"Failed to initialize vectore store {e}")
             raise
-    def add_documents(self,documents):
+
+    def add_documents(self, documents):
         """Add documents to the vector store"""
         try:
             if not documents:
@@ -36,21 +38,27 @@ class VectorestoreService:
             logger.error(f"Error adding documents: {e}")
             raise
     
-    def similarity_search(self,query:str,k:int=settings.TOP_K_RESULTS,filter_files: list = []):
+    def similarity_search(self, query:str, k:int=settings.TOP_K_RESULTS, filter_files: list = []):
         """Performe Similarity Search"""
         try:
-            search_kwargs = {"k": k}
-            filter_arg = None
+            search_kwargs: dict = {"k": k}
+            
+            # Correct filtering logic for ChromaDB
             if filter_files and len(filter_files) > 0:
-                # Join multiple filenames into a single comma-separated string
-                filter_arg = {"filename": ",".join(filter_files)}
-            else:
-                filter_arg = None
-            logger.info(f"Performing similarity search for the provided query...")
+                if len(filter_files) == 1:
+                    # Single file filter
+                    search_kwargs["filter"] = {"filename": filter_files[0]}
+                else:
+                    # Multiple files filter using $in operator
+                    search_kwargs["filter"] = {"filename": {"$in": filter_files}}
+            
+            logger.info(f"Performing similarity search... Filter: {search_kwargs.get('filter')}")
+            
             if self.vectorestore:
-                results = self.vectorestore.similarity_search(query, k=k, filter=filter_arg)
+                results = self.vectorestore.similarity_search(query, **search_kwargs)
             else:
                 results = []
+                
             logger.info(f"Found {len(results)} results") 
             return results
         except Exception as e:
@@ -64,3 +72,12 @@ class VectorestoreService:
             logger.info("Collection deleted")
         except Exception as e:
             logger.error(f"Error deleting collection {e}")
+            
+    def delete_documents_by_filename(self, filename: str):
+        """Delete documents associated with a specific filename"""
+        try:
+            if self.vectorestore:
+                 self.vectorestore._collection.delete(where={"filename": filename})
+                 logger.info(f"Deleted documents for {filename}")
+        except Exception as e:
+            logger.error(f"Error deleting document by filename {e}")

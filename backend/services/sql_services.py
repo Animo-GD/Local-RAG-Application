@@ -22,14 +22,35 @@ class SQLService:
             )
             dspy.configure(lm=self.lm)
             
-            if os.path.exists(settings.DATABASE_PATH):
-                logger.info(f"Connecting to database: {settings.DATABASE_PATH}")
-                self.db = SQLDatabase.from_uri(f"sqlite:///{settings.DATABASE_PATH}")
+            # Dynamic Database Detection
+            db_dir = os.path.dirname(settings.DATABASE_PATH)
+            real_db_path = None
+            
+            if os.path.exists(db_dir):
+                # Find any file ending with .db
+                db_files = [f for f in os.listdir(db_dir) if f.endswith('.db')]
+                
+                if db_files:
+                    # Prefer 'database.db' if it exists, otherwise take the first one found
+                    if "database.db" in db_files:
+                        target_db = "database.db"
+                    else:
+                        target_db = db_files[0]
+                    
+                    real_db_path = os.path.join(db_dir, target_db)
+                    logger.info(f"Detected database file: {real_db_path}")
+                else:
+                    logger.warning(f"No .db files found in {db_dir}")
+            
+            if real_db_path and os.path.exists(real_db_path):
+                logger.info(f"Connecting to database: {real_db_path}")
+                self.db = SQLDatabase.from_uri(f"sqlite:///{real_db_path}")
                 self.avaliable_tables = self.db.get_usable_table_names()
                 logger.info("Database connected successfully")
                 logger.info(f"Available tables: {self.avaliable_tables}")
             else:
-                logger.warning("No database file found.")
+                logger.warning("No database file found or connection failed.")
+                
         except Exception as e:
             logger.error(f"Failed to initialize database {e}")
     
@@ -93,7 +114,10 @@ class SQLService:
     def generate_sql(self, question: str, selected_tables: list = []) -> str:
         """Generate SQL query from natural language question"""
         if self.db is None:
-            raise ValueError("Database not initialized. Call initialize() first.")
+            # Try to re-initialize if not connected (lazy load attempt)
+            self.initialize()
+            if self.db is None:
+                raise ValueError("Database not initialized. Please upload a .db file.")
         
         sql_gen = self.SQLGenerator(self.db, selected_tables)
         sql_query = sql_gen(question)
@@ -102,7 +126,7 @@ class SQLService:
     def execute_sql_as_dict(self, sql_query: str) -> list[dict]:
         """Execute SQL and return results as list of dictionaries"""
         if self.db is None:
-            raise ValueError("Database not initialized. Call initialize() first.")
+             raise ValueError("Database not initialized.")
         try:
             with self.db._engine.connect() as conn:
                 result = conn.execute(text(sql_query))

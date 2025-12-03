@@ -5,7 +5,7 @@ class APIService {
     this.baseURL = API_BASE_URL;
   }
 
-  async query(query, options = {}) {
+  async query(query, config = {}) {
     try {
       const response = await fetch(`${this.baseURL}/api/query`, {
         method: 'POST',
@@ -14,9 +14,9 @@ class APIService {
         },
         body: JSON.stringify({ 
             query,
-            model: options.model, 
-            selected_files: options.selectedFiles || [],
-            selected_tables: options.selectedTables || []  // Add this
+            model: config.model,
+            selected_files: config.selectedFiles,
+            selected_tables: config.selectedTables
         }),
       });
 
@@ -32,21 +32,6 @@ class APIService {
     }
   }
 
-  async deleteDocument(filename) {
-      try {
-        const response = await fetch(`${this.baseURL}/api/document`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename })
-        });
-        if (!response.ok) throw new Error('Failed to delete');
-        return await response.json();
-    } catch (error) {
-        console.error('Delete error:', error);
-        throw error;
-    }
-  }
-  
   async uploadDocument(file) {
     try {
       const formData = new FormData();
@@ -91,6 +76,7 @@ class APIService {
     }
   }
 
+  // هذه الدالة كانت مفقودة وتسبب عدم ظهور الجداول
   async listTables() {
     try {
       const response = await fetch(`${this.baseURL}/api/tables`);
@@ -99,6 +85,21 @@ class APIService {
     } catch (error) {
       console.error('List tables error:', error);
       throw error;
+    }
+  }
+
+  async deleteDocument(filename) {
+    try {
+        const response = await fetch(`${this.baseURL}/api/document`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename })
+        });
+        if (!response.ok) throw new Error('Failed to delete');
+        return await response.json();
+    } catch (error) {
+        console.error('Delete error:', error);
+        throw error;
     }
   }
 }
